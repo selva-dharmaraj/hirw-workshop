@@ -1,0 +1,560 @@
+hive> CREATE DATABASE emp;
+
+hive> DESCRIBE DATABASE emp;
+
+hive> ALTER DATABASE emp SET DBPROPERTIES ('created_by' = 'hirw', 'created_on' = '2015-02-16' 'description'='This database holds employee data');
+
+hive> DESCRIBE DATABASE emp;
+
+hive> USE emp;
+
+hive> CREATE TABLE IF NOT EXISTS employee(
+emp_id int,
+emp_name string,
+emp_salary float);
+
+hive> DESCRIBE employee;
+
+hive> DESCRIBE emp.employee;
+
+hive> DESCRIBE EXTENDED emp.employee;
+
+hive> DESCRIBE FORMATTED emp.employee;
+
+hive> DROP DATABASE emp;
+
+hive> DROP DATABASE emp CASCADE;
+
+############
+
+
+hadoop fs -mkdir input
+hadoop fs -mkdir input/nyse
+hadoop fs -mkdir input/nyse/stocks
+hadoop fs -copyFromLocal /hirw-workshop/input/nyse/stocks/* input/nyse/stocks
+hadoop fs -ls input/nyse/stocks
+
+hive> !hadoop fs -ls input/nyse/stocks;
+
+hive> CREATE DATABASE nyse;
+
+hive> ALTER DATABASE nyse SET DBPROPERTIES ('created_by' = 'hirw', 'created_on' = '2015-02-16', 'description'='This database holds NYSE data!!!');
+
+hive> USE nyse;
+
+hive> CREATE TABLE IF NOT EXISTS stocks (
+exch string,
+symbol string,
+ymd string,
+price_open float,
+price_high float,
+price_low float,
+price_close float,
+volume int,
+price_adj_close float)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED nyse.stocks;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks;
+
+hive> LOAD DATA INPATH 'input/nyse/stocks'
+INTO TABLE stocks;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks;
+
+hive> !hadoop fs -ls input/nyse/stocks;
+
+hive> select * from stocks;
+
+hive> DROP TABLE stocks;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks;
+
+hive> CREATE EXTERNAL TABLE IF NOT EXISTS stocks_ext (
+exch string,
+symbol string,
+ymd string,
+price_open float,
+price_high float,
+price_low float,
+price_close float,
+volume int,
+price_adj_close float)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED nyse.stocks_ext;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ext;
+
+hadoop fs -copyFromLocal /home/cloudera/hirw-workshop/input/nyse/stocks/* input/nyse/stocks
+
+hive> !hadoop fs -ls input/nyse/stocks;
+
+hive> LOAD DATA INPATH 'input/nyse/stocks'
+INTO TABLE stocks_ext;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ext;
+
+hive> !hadoop fs -ls input/nyse/stocks;
+
+hive> select * from stocks_ext;
+
+hive> DROP TABLE stocks_ext;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ext;
+
+############ LOCATION & LOADING ############
+
+hive> CREATE TABLE IF NOT EXISTS stocks (
+exch string,
+symbol string,
+ymd string,
+price_open float,
+price_high float,
+price_low float,
+price_close float,
+volume int,
+price_adj_close float)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED stocks;
+
+hive> DROP TABLE stocks;
+
+hive> CREATE TABLE IF NOT EXISTS stocks (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/user/cloudera/stocks'
+TBLPROPERTIES ('creator'='hirw', 'created_on' = '2015-02-16', 'description'='This table holds stocks data!!!');
+
+hive> DESCRIBE FORMATTED stocks;
+
+hadoop fs -copyFromLocal /home/cloudera/hirw-workshop/input/nyse/stocks/* input/nyse/stocks
+
+hive> LOAD DATA INPATH 'input/nyse/stocks'
+INTO TABLE stocks;
+
+hive> !hadoop fs -ls /user/cloudera/stocks;
+
+hive> select * from stocks;
+
+hive> DROP TABLE stocks;
+
+hive> !hadoop fs -ls /user/cloudera/stocks;
+
+hadoop fs -copyFromLocal /home/cloudera/hirw-workshop/input/nyse/stocks/* input/nyse/stocks
+
+hive> !hadoop fs -ls /user/cloudera/input/nyse/stocks;
+
+hive> CREATE EXTERNAL TABLE IF NOT EXISTS stocks (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/user/cloudera/input/nyse/stocks'
+TBLPROPERTIES ('creator'='hirw', 'created_on' = '2015-02-16', 'description'='This table holds stocks data!!!');
+
+
+hive> CREATE TABLE stocks_ctas
+AS
+SELECT * FROM stocks;
+
+hive> DESCRIBE FORMATTED stocks_ctas;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ctas;
+
+hive> INSERT INTO TABLE stocks_ctas
+SELECT s.* FROM stocks s;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ctas;
+
+hive> INSERT OVERWRITE TABLE stocks_ctas
+SELECT s.* FROM stocks s;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_ctas;
+
+--May not be available in our hive version
+hive> INSERT INTO TABLE stocks_cta
+VALUES ('NYSE', 'TSLA', '2015-02-18', 217.8, 220,3, 216.9, 218.7, 2469000, null);
+
+#### Hive Query Part 1 ####
+
+hive> SELECT * FROM stocks
+WHERE symbol = 'ASP';
+
+hive> SELECT * FROM stocks
+WHERE symbol IN ('DFG', 'ASP');
+
+hive> SELECT * FROM stocks
+WHERE exch LIKE 'NY%' and symbol RLIKE 'A.P';
+
+hive> SELECT symbol, price_open, price_close, volume,
+CASE
+ WHEN volume < 200000 THEN 'low'
+ WHEN volume >= 200000 AND volume < 400000 THEN 'middle'
+ WHEN volume >= 400000 AND volume < 600000 THEN 'high'
+ ELSE 'very high'
+END AS volume_level 
+FROM stocks
+WHERE symbol = 'CBZ';
+
+hive> SELECT DISTINCT exch, symbol FROM stocks;
+
+hive> SELECT * FROM stocks
+LIMIT 10;
+
+hive> SELECT year(ymd), symbol, avg(volume) FROM stocks
+GROUP BY year(ymd), symbol;
+
+hive> SELECT year(ymd), symbol, avg(volume) FROM stocks
+GROUP BY year(ymd), symbol
+HAVING avg(volume) > 400000;
+
+hive> SELECT year(ymd), symbol, avg(volume) avgvol FROM stocks
+GROUP BY year(ymd), symbol
+ORDER BY avgvol DESC;
+
+hive> SET mapreduce.job.reduces=3;
+
+hive> SELECT ymd, symbol, price_close
+FROM stocks WHERE year(ymd) = '2003'
+SORT BY symbol ASC, price_close DESC;
+
+hive> INSERT OVERWRITE DIRECTORY '/output/hive/stocks'
+SELECT ymd, symbol, price_close
+FROM stocks WHERE year(ymd) = '2003'
+SORT BY symbol ASC, price_close DESC;
+
+hadoop fs -copyToLocal /output/hive/stocks/*
+
+hive> INSERT OVERWRITE DIRECTORY '/output/hive/stocks'
+SELECT ymd, symbol, price_close
+FROM stocks WHERE year(ymd) = '2003'
+DISTRIBUTE BY symbol
+SORT BY symbol ASC, price_close DESC;
+
+hive> SELECT ymd, symbol, price_close
+FROM stocks
+DISTRIBUTE BY symbol
+SORT BY symbol ASC;
+
+hive> SELECT ymd, symbol, price_close
+FROM stocks
+CLUSTER BY symbol;
+
+#### FIND LESSON ####
+
+hive> SELECT ymd, symbol, price_close from stocks
+UNION ALL
+SELECT ymd, symbol, price_close from stocks_ctas;
+
+hive> FROM (
+SELECT * FROM stocks
+where symbol='CBZ'
+) e
+SELECT e.symbol, e.price_open, e.price_close, e.volume
+WHERE e.volume > 300000;
+
+##### PARTITIONS #####
+
+hive> CREATE TABLE IF NOT EXISTS stocks_partition (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+PARTITIONED BY (sym STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED stocks_partition;
+
+hive> LOAD DATA INPATH 'input/nyse/stocks'
+INTO TABLE stocks_partition;
+
+hive> INSERT OVERWRITE TABLE stocks_partition
+PARTITION (sym = 'CLI')
+SELECT * FROM stocks s
+WHERE s.symbol = 'CLI';
+
+hive> INSERT OVERWRITE TABLE stocks_partition
+PARTITION (sym = 'CSL')
+SELECT * FROM stocks s
+WHERE s.symbol = 'CSL';
+
+hive> SHOW PARTITIONS stocks_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_partition/sym=CLI;
+
+hive> SELECT * FROM stocks_partition
+WHERE sym='CLI';
+
+hive> INSERT OVERWRITE DIRECTORY '/output/hive/stocks-cbz'
+SELECT *
+FROM stocks WHERE symbol='CBZ';
+
+hive> ALTER TABLE stocks_partition ADD IF NOT EXISTS
+PARTITION (sym = 'CBZ') LOCATION '/output/hive/stocks-cbz';
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_partition;
+
+hive> SHOW PARTITIONS stocks_partition;
+
+hive> SELECT * FROM stocks_partition
+WHERE sym = 'CBZ';
+
+hive> FROM stocks s
+INSERT OVERWRITE TABLE stocks_partition
+PARTITION (sym = 'CMP')
+SELECT * WHERE s.symbol = 'CMP'
+INSERT OVERWRITE TABLE stocks_partition
+PARTITION (sym = 'CVH')
+SELECT * WHERE s.symbol = 'CVH';
+
+hive> SHOW PARTITIONS stocks_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_partition;
+
+hive> ALTER TABLE stocks_partition DROP IF EXISTS PARTITION(sym = 'CBZ');
+
+hive> SELECT * FROM stocks_partition
+WHERE sym='CBZ';
+
+hive> SET hive.exec.dynamic.partition=true;
+
+hive> CREATE TABLE IF NOT EXISTS stocks_dynamic_partition (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+PARTITIONED BY (yr STRING, sym STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED stocks_dynamic_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_dynamic_partition;
+
+hive> INSERT OVERWRITE TABLE stocks_dynamic_partition
+PARTITION (yr, sym)
+SELECT *, year(ymd), s.symbol
+FROM stocks s;
+
+hive> SET hive.exec.dynamic.partition.mode=nonstrict;
+
+--Default is 100
+hive> SET hive.exec.max.dynamic.partitions=15000;
+hive> SET hive.exec.max.dynamic.partitions.pernode=15000;
+
+hive> SHOW PARTITIONS stocks_dynamic_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_dynamic_partition;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_dynamic_partition/yr=2010;
+
+hive> SELECT * FROM stocks 
+WHERE yr=2010;
+
+hive> SELECT * FROM stocks_dynamic_partition
+WHERE yr=2010 and sym='DYN';
+
+hive> ALTER TABLE stocks_dynamic_partition DROP IF EXISTS PARTITION(yr=2010, sym = 'DYN');
+
+##### BUCKETS #####
+
+hive> CREATE TABLE IF NOT EXISTS stocks_bucket (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+CLUSTERED BY (symbol) INTO 5 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> DESCRIBE FORMATTED stocks_bucket;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_bucket;
+
+hive> SET hive.enforce.bucketing = true;
+INSERT INTO TABLE stocks_bucket
+SELECT * FROM stocks s;
+
+hive> CREATE TABLE IF NOT EXISTS stocks_bucket_ptn (
+exch STRING,
+symbol STRING,
+ymd STRING,
+price_open FLOAT,
+price_high FLOAT,
+price_low FLOAT,
+price_close FLOAT,
+volume INT,
+price_adj_close FLOAT)
+PARTITIONED BY (sym STRING)
+CLUSTERED BY (ymd) SORTED BY (ymd) INTO 3 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+hive> SET hive.exec.dynamic.partition=true;
+hive> SET hive.exec.dynamic.partition.mode=nonstrict;
+
+--Default is 100
+hive> SET hive.exec.max.dynamic.partitions=15000;
+hive> SET hive.exec.max.dynamic.partitions.pernode=15000;
+
+hive> SET hive.enforce.bucketing = true;
+INSERT INTO TABLE stocks_bucket_ptn
+PARTITION (sym)
+SELECT *, symbol
+FROM stocks s;
+
+hive> DESCRIBE FORMATTED stocks_bucket_ptn;
+
+hive> SHOW PARTITIONS stocks_bucket_ptn;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_bucket_ptn;
+
+hive> !hadoop fs -ls /user/hive/warehouse/nyse.db/stocks_bucket_ptn/sym=DUC;
+
+hive> SELECT * FROM stocks_bucket_ptn
+WHERE sym='DUC';
+
+
+##### JOIN #####
+
+hadoop fs -mkdir input/nyse/dividends
+hadoop fs -copyFromLocal /hirw-workshop/input/nyse/dividends/* input/nyse/dividends
+hadoop fs -ls input/nyse/dividends
+
+hive> CREATE EXTERNAL TABLE IF NOT EXISTS dividends (
+exch STRING,
+symbol STRING,
+ymd STRING,
+dividend FLOAT
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/user/hadoopcourse/input/nyse/dividends';
+
+hive> SELECT * FROM dividends;
+
+hive> SELECT s.exch, s.symbol, s.ymd, s.price_close, d.dividend
+FROM stocks s INNER JOIN dividends d 
+ON s.symbol = d.symbol AND s.ymd = d.ymd;
+
+hive> SELECT s.exch, s.symbol, s.ymd, s.price_close, d.dividend
+FROM stocks s LEFT OUTER JOIN dividends d 
+ON s.symbol = d.symbol AND s.ymd = d.ymd;
+
+hive> SELECT s.exch, s.symbol, s.ymd, s.price_close, d.dividend
+FROM stocks s LEFT OUTER JOIN dividends d 
+ON s.symbol = d.symbol AND s.ymd = d.ymd
+WHERE d.dividend IS NOT NULL;
+
+hive> SELECT s.exch, s.symbol, s.ymd, s.price_close, d.dividend
+FROM stocks s RIGHT OUTER JOIN dividends d 
+ON s.symbol = d.symbol AND s.ymd = d.ymd;
+
+hive> SELECT s.exch, s.symbol, s.ymd, s.price_close, d.dividend
+FROM stocks s FULL OUTER JOIN dividends d 
+ON s.symbol = d.symbol AND s.ymd = d.ymd;
+
+--Implements IN/EXISTS. As of  As of Hive 0.13 the IN/NOT IN/EXISTS/NOT EXISTS operators are supported using subqueries so most of these JOINs don't have to be performed manually anymore.
+hive> SELECT s.ymd, s.symbol, s.price_close
+FROM stocks s LEFT SEMI JOIN dividends d 
+ON s.ymd = d.ymd AND s.symbol = d.symbol;
+
+--Only equality joins
+CROSS JOIN followed by WHERE condition
+
+--Not Allowed
+SELECT a.* FROM a JOIN b ON (a.id <> b.id)
+
+--Same key. Only one MR job
+SELECT a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key1)
+
+--2 MR Job. The first map/reduce job joins a with b and the results are then joined with c in the second map/reduce job.
+SELECT a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key2)
+
+--Last table in the join is streamed to reducer. One MR job vs Multiple jobs
+SELECT a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key1)
+SELECT a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key2)
+
+--
+SELECT /*+ STREAMTABLE(a) */ a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key1)
+
+#### JOIN OPTIMIZATION ####
+
+Explain conditional task
+https://cwiki.apache.org/confluence/display/Hive/MapJoinOptimization
+https://www.facebook.com/notes/facebook-engineering/join-optimization-in-apache-hive/470667928919
+
+--Restriction - FULL/RIGHT OUTER JOIN b cannot be performed.
+SELECT /*+ MAPJOIN(b) */ a.key, a.value
+FROM a JOIN b ON a.key = b.key
+
+If the tables being joined are bucketized on the join columns, and the number of buckets in one table is a multiple of the number of buckets in the other table, the buckets can be joined with each other.
+
+SELECT /*+ MAPJOIN(b) */ a.key, a.value
+FROM a JOIN b ON a.key = b.key
+
+Above join will be done on the mapper only. Instead of fetching B completely for each mapper of A, only the required buckets are fetched. For the query above, the mapper processing bucket 1 for A will only fetch bucket 1 of B. It is not the default behavior, and is governed by the following parameter
+
+set hive.optimize.bucketmapjoin = true
+
+If the tables being joined are sorted and bucketized on the join columns, and they have the same number of buckets, a sort-merge join can be performed. The corresponding buckets are joined with each other at the mapper. If both A and B have 4 buckets,
+SELECT /*+ MAPJOIN(b) */ a.key, a.value
+FROM A a JOIN B b ON a.key = b.key
+
+Above join will be done on the mapper only. The mapper for the bucket for A will traverse the corresponding bucket for B. This is not the default behavior, and the following parameters need to be set:
+
+set hive.input.format=org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
+set hive.optimize.bucketmapjoin = true;
+set hive.optimize.bucketmapjoin.sortedmerge = true;
+
+
+The configuration variable hive.auto.convert.join (if set to true) automatically converts the joins to mapjoins at runtime if possible, and it should be used instead of the mapjoin hint. The mapjoin hint should only be used for the following query.
+If all the inputs are bucketed or sorted, and the join should be converted to a bucketized map-side join or bucketized sort-merge join.
+
+set hive.mapjoin.smalltable.filesize = 30000000.
+
+
+Consider the possibility of multiple mapjoins on different keys:
+
+select /*+MAPJOIN(smallTableTwo)*/ idOne, idTwo, value FROM
+  ( select /*+MAPJOIN(smallTableOne)*/ idOne, idTwo, value FROM
+    bigTable JOIN smallTableOne on (bigTable.idOne = smallTableOne.idOne)                                                  
+  ) firstjoin                                                            
+  JOIN                                                                 
+  smallTableTwo ON (firstjoin.idTwo = smallTableTwo.idTwo)                      
+  
+The above query is not supported[WHY??]. Without the mapjoin hint, the above query would be executed as 2 map-only jobs. If the user knows in advance that the inputs are small enough to fit in memory, the following configurable parameters can be used to make sure that the query executes in a single map-reduce job.
+
+hive.auto.convert.join.noconditionaltask - Whether Hive enable the optimization about converting common join into mapjoin based on the input file size. If this paramater is on, and the sum of size for n-1 of the tables/partitions for a n-way join is smaller than the specified size, the join is directly converted to a mapjoin (there is no conditional task).
+
+hive.auto.convert.join.noconditionaltask.size - If hive.auto.convert.join.noconditionaltask is off, this parameter does not take affect. However, if it is on, and the sum of size for n-1 of the tables/partitions for a n-way join is smaller than this size, the join is directly converted to a mapjoin(there is no conditional task). The default is 10MB.

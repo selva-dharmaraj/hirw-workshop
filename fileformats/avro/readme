@@ -1,0 +1,20 @@
+--Python script to read avro file
+python /hirw-workshop/fileformats/avro/readavro.py
+
+--Delete the ouput directory
+hadoop fs -rm -r output/fileformats/avro
+
+--To generate Users.java file
+java -jar /hirw-workshop/fileformats/avro/avro-tools-1.7.6.jar compile schema /hirw-workshop/fileformats/avro/users.avro.schema .
+
+--Run a MapReduce program against an AVRO dataset
+hadoop jar /hirw-workshop/fileformats/avro/AvroMapReduce.jar com.hirw.avro.ColorCountDriver /user/hirw/input/fileformats/avro output/fileformats/avro
+
+--Review ouput
+hadoop fs -ls output/fileformats/avro
+
+--Copy the output locally
+hadoop fs -copyToLocal output/fileformats/avro/part-r-00000.avro
+
+--Covert the AVRO output to JSON
+java -jar /hirw-workshop/fileformats/avro/avro-tools-1.7.6.jar tojson part-r-00000.avro

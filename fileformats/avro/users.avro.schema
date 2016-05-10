@@ -1,0 +1,1 @@
+{"type":"record","name":"User","namespace":"com.hirw.avro","fields":[{"name":"name","type":"string"},{"name":"favorite_number","type":["int","null"]},{"name":"favorite_color","type":["string","null"]}]}

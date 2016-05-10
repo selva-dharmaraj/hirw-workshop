@@ -1,0 +1,89 @@
+### www.hadoopinrealworld ###
+### Apache Sqoop - Jobs ###
+
+## Classic Import with Selection ###
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --columns "symbol,name,trade_date,volume" --where "id > 10" -m 1 --target-dir /user/hirw/sqoop/stocks_selective
+
+## Incremental Import - Append ##
+
+sqoop job --create incrementalImportJob -- import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --target-dir /user/hirw/sqoop/stocks_append --incremental append --check-column id
+
+sqoop job --list
+
+sqoop job --show incrementalImportJob
+
+sqoop job --exec incrementalImportJob
+
+hadoop fs -ls sqoop/stocks_append
+hadoop fs -cat sqoop/stocks_append/part-m-00000
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AAL', 'American Airlines', '2015-11-12', 42.4, 4404500);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AAPL', 'Apple', '2015-11-12', 115.23, 40217300);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AMGN', 'Amgen', '2015-11-12', 157.0, 1964900);
+
+sqoop job --exec incrementalImportJob
+
+hadoop fs -ls sqoop/stocks_append
+hadoop fs -cat sqoop/stocks_append/part-m-00004
+
+
+## Incremental Import - lastmodified ##
+
+sqoop job --create incrementalImportModifiedJob -- import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --target-dir /user/hirw/sqoop/stocks_modified --incremental lastmodified --check-column updated_time -m 1 --append
+
+sqoop job --list
+
+sqoop job --show incrementalImportModifiedJob
+
+sqoop job --exec incrementalImportModifiedJob
+
+hadoop fs -ls sqoop/stocks_modified
+hadoop fs -cat sqoop/stocks_modified/part-m-00000
+
+UPDATE stocks SET volume = volume+100, updated_time=now() WHERE id in (10,11,12);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('GARS', 'Garrison', '2015-11-12', 12.4, 23500);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('SBUX', 'Starbucks', '2015-11-12', 62.90, 4545300);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('SGI', 'Silicon Graphics', '2015-11-12', 4.12, 123200);
+
+sqoop job --show incrementalImportModifiedJob
+
+sqoop job --exec incrementalImportModifiedJob
+
+hadoop fs -ls sqoop/stocks_modified
+hadoop fs -cat sqoop/stocks_modified/part-m-00001
+
+### MERGE ###
+
+sqoop codegen --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --outdir /home/hirw/sqoop/sqoop-codegen-stocks
+
+--Copy the jar file
+
+sqoop merge --new-data /user/hirw/sqoop/stocks_modified/part-m-00001 --onto /user/hirw/sqoop/stocks_modified/part-m-00000 --target-dir /user/hirw/sqoop/stocks_modified/merged --jar-file stocks.jar --class-name stocks --merge-key id
+
+hadoop fs -ls sqoop/stocks_modified/merged
+
+hadoop fs -cat sqoop/stocks_modified/merged/part-r-00000

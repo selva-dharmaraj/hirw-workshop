@@ -1,0 +1,4 @@
+##www.hadoopinrealworld.com##
+##To run simple flume agent##
+
+flume-ng agent --conf /hirw-workshop/flume/simple/ -f /hirw-workshop/flume/simple/simple-flume.conf -Dflume.root.logger=DEBUG,console -n agent

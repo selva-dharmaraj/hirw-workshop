@@ -1,0 +1,24 @@
+/**************Hadoop In Real World**************/
+Hadoop In Real World *** http://www.hadoopinrealworld.com
+Million Song Dataset
+/**************Hadoop In Real World**************/
+
+--Delete output directory
+hadoop fs -rm -r output/songs/*
+
+--Delete output files in the local FS
+rm part-r-*
+
+--Review output (Part-1)
+hadoop fs -ls output/songs/part1
+
+hadoop fs -copyToLocal output/songs/part1/part-r-00000
+
+--Review output (Part-2)
+hadoop fs -ls output/songs/part2
+
+hadoop fs -copyToLocal output/songs/part2/part-r-00000
+
+
+
+

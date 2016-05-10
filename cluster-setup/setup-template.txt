@@ -1,0 +1,343 @@
+#############################
+
+Create Instances
+--Public DNS for the newly created instances
+
+ec2-52-3-178-66.compute-1.amazonaws.com
+ec2-52-3-8-114.compute-1.amazonaws.com
+ec2-52-2-237-123.compute-1.amazonaws.com
+
+--Internal DNS for the newly created instances
+ip-172-31-20-160.ec2.internal
+ip-172-31-20-161.ec2.internal
+ip-172-31-20-162.ec2.internal
+
+--To login to instances using Windows
+Use PuttyGen to generate .ppk file (private key) from .pem file
+
+--To login to instances using Linux
+https://www.youtube.com/watch?v=dshyg5cLEPE
+
+--Setup id_rsa on all nodes
+
+cd .ssh
+vi id_rsa
+sudo chown ubuntu:ubuntu id_rsa
+chmod 600 id_rsa
+
+--Copy the downloaded JDK to both instances with winscp or other ssh tools of your choice
+
+scp jdk-8u60-linux-x64.gz ip-172-31-20-161.ec2.internal:/home/ubuntu/
+scp jdk-8u60-linux-x64.gz ip-172-31-20-162.ec2.internal:/home/ubuntu/
+
+--Untar JDK
+tar -xvf jdk-8u60-linux-x64.gz
+
+--Move jdk to /usr/lib/jvm
+sudo mkdir -p /usr/lib/jvm
+sudo mv ./jdk1.8.0_60 /usr/lib/jvm/
+
+--Create alternatives
+sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk1.8.0_60/bin/java" 1
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk1.8.0_60/bin/javac" 1
+sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/jdk1.8.0_60/bin/javaws" 1
+
+--Set permissions
+sudo chmod a+x /usr/bin/java 
+sudo chmod a+x /usr/bin/javac 
+sudo chmod a+x /usr/bin/javaws
+sudo chown -R root:root /usr/lib/jvm/jdk1.8.0_60
+
+--Set JAVA_HOME (on all nodes) in /etc/environment
+sudo vi /etc/environment
+export JAVA_HOME=/usr/lib/jvm/jdk1.8.0_60
+
+############
+
+On all nodes
+
+sudo vi /etc/apt/sources.list.d/cloudera.list
+
+deb [arch=amd64] http://archive.cloudera.com/cdh5/ubuntu/trusty/amd64/cdh trusty-cdh5 contrib
+deb-src http://archive.cloudera.com/cdh5/ubuntu/trusty/amd64/cdh trusty-cdh5 contrib
+
+sudo vi /etc/apt/preferences.d/cloudera.pref
+
+Package: *
+Pin: release o=Cloudera, l=Cloudera
+Pin-Priority: 501
+
+On Master
+
+sudo apt-get update
+sudo apt-get install hadoop-yarn-resourcemanager
+sudo apt-get install hadoop-hdfs-namenode
+sudo apt-get install hadoop-mapreduce-historyserver hadoop-yarn-proxyserver
+sudo apt-get install hadoop-client
+
+On Slave 1
+
+sudo apt-get update
+sudo apt-get install hadoop-hdfs-secondarynamenode
+sudo apt-get install hadoop-yarn-nodemanager hadoop-hdfs-datanode hadoop-mapreduce
+sudo apt-get install hadoop-client
+
+On Slave 2
+
+sudo apt-get update
+sudo apt-get install hadoop-yarn-nodemanager hadoop-hdfs-datanode hadoop-mapreduce
+sudo apt-get install hadoop-client
+
+On Master
+sudo cp -r /etc/hadoop/conf.empty /etc/hadoop/conf.cdh5
+
+sudo update-alternatives --install /etc/hadoop/conf hadoop-conf /etc/hadoop/conf.cdh5 50
+sudo update-alternatives --set hadoop-conf /etc/hadoop/conf.cdh5
+
+
+core-site.xml
+sudo vi /etc/hadoop/conf.cdh5/core-site.xml
+
+	<property>
+	 <name>fs.defaultFS</name>
+	 <value>hdfs://ip-172-31-20-160.ec2.internal:8020</value>
+	</property>
+	<property>
+	  <name>io.compression.codecs</name>
+	  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.SnappyCodec</value>
+	</property>
+	<property>
+	 <name>hadoop.proxyuser.mapred.groups</name>
+	 <value>*</value>
+	</property>
+		<property>
+	 <name>hadoop.proxyuser.mapred.hosts</name>
+	 <value>*</value>
+	</property>
+		
+	
+hdfs-site.xml
+sudo vi /etc/hadoop/conf.cdh5/hdfs-site.xml
+
+	<property>
+	 <name>dfs.permissions.superusergroup</name>
+	 <value>hadoop</value>
+	</property>	
+	<property>
+	 <name>dfs.namenode.name.dir</name>
+	 <value>file:///data/1/dfs/nn</value>
+	</property>	
+	<property>
+	 <name>dfs.datanode.data.dir</name>
+	 <value>file:///data/1/dfs/dn</value>
+	</property>	
+	<property>
+	  <name>dfs.namenode.http-address</name>
+	  <value>ip-172-31-20-160.ec2.internal:50070</value>
+	  <description>
+		The address and the base port on which the dfs NameNode Web UI will listen.
+	  </description>
+	</property>
+	<property>
+	  <name>dfs.webhdfs.enabled</name>
+	  <value>true</value>
+	</property>
+	
+mapred-site.xml
+sudo vi /etc/hadoop/conf.cdh5/mapred-site.xml
+
+	<property>
+	 <name>mapreduce.framework.name</name>
+	 <value>yarn</value>
+	</property>
+	<property>
+	 <name>mapreduce.jobhistory.address</name>
+	 <value>ip-172-31-20-160.ec2.internal:10020</value>
+	</property>
+	<property>
+	 <name>mapreduce.jobhistory.webapp.address</name>
+	 <value>ip-172-31-20-160.ec2.internal:19888</value>
+	</property>	
+	<property>
+		<name>yarn.app.mapreduce.am.staging-dir</name>
+		<value>/user</value>
+	</property>	
+	
+yarn-site.xml
+sudo vi /etc/hadoop/conf.cdh5/yarn-site.xml
+
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>ip-172-31-20-160.ec2.internal</value>
+  </property>   
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>ip-172-31-20-160.ec2.internal:8031</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.address</name>
+    <value>ip-172-31-20-160.ec2.internal:8032</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>ip-172-31-20-160.ec2.internal:8030</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.admin.address</name>
+    <value>ip-172-31-20-160.ec2.internal:8033</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.webapp.address</name>
+    <value>ec2-52-3-178-66.compute-1.amazonaws.com:8088</value>
+  </property>  
+  <property>
+    <description>Classpath for typical applications.</description>
+    <name>yarn.application.classpath</name>
+    <value>
+        $HADOOP_CONF_DIR,
+        $HADOOP_COMMON_HOME/*,$HADOOP_COMMON_HOME/lib/*,
+        $HADOOP_HDFS_HOME/*,$HADOOP_HDFS_HOME/lib/*,
+        $HADOOP_MAPRED_HOME/*,$HADOOP_MAPRED_HOME/lib/*,
+        $HADOOP_YARN_HOME/*,$HADOOP_YARN_HOME/lib/*
+    </value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.local-dirs</name>
+    <value>file:///data/1/yarn/local</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.log-dirs</name>
+    <value>file:///data/1/yarn/logs</value>
+  </property>
+  <property>
+    <name>yarn.log.aggregation.enable</name>
+    <value>true</value> 
+  </property>
+  <property>
+    <description>Where to aggregate logs</description>
+    <name>yarn.nodemanager.remote-app-log-dir</name>
+    <value>hdfs://var/log/hadoop-yarn/apps</value>
+  </property>	
+
+masters 
+sudo vi /etc/hadoop/conf.cdh5/masters
+ip-172-31-20-161.ec2.internal
+
+--Set JAVA_HOME (on all nodes)
+sudo vi /usr/lib/bigtop-utils/bigtop-detect-javahome
+
+--Add export JAVA_HOME before the if statement - for loop
+
+export JAVA_HOME=/usr/lib/jvm/jdk1.8.0_60
+
+--On Slaves
+sudo cp -r /etc/hadoop/conf.empty /etc/hadoop/conf.cdh5
+sudo chmod 777 -R /etc/hadoop
+
+--Copy configuration files to Slaves (Execute from Master)
+
+scp -r /etc/hadoop/conf.cdh5/* ip-172-31-20-161.ec2.internal:/etc/hadoop/conf.cdh5
+scp -r /etc/hadoop/conf.cdh5/* ip-172-31-20-162.ec2.internal:/etc/hadoop/conf.cdh5
+
+On Slaves (after copying)
+sudo chmod 755 -R /etc/hadoop
+
+sudo update-alternatives --install /etc/hadoop/conf hadoop-conf /etc/hadoop/conf.cdh5 50
+sudo update-alternatives --set hadoop-conf /etc/hadoop/conf.cdh5
+
+On Master
+
+sudo mkdir -p /data/1/dfs/nn
+sudo chown -R hdfs:hdfs /data/1/dfs/nn
+sudo chmod 700 /data/1/dfs/nn
+
+On Slaves	
+
+sudo mkdir -p /data/1/dfs/dn
+sudo chown -R hdfs:hdfs /data/1/dfs/dn
+
+Format Namenode on Master node
+sudo -u hdfs hdfs namenode -format
+
+
+Start HDFS
+## run below on all nodes - starts appropriate services in appropriate nodes
+for x in `cd /etc/init.d ; ls hadoop-hdfs-*` ; do sudo service $x start ; done
+
+
+http://ec2-52-3-178-66.compute-1.amazonaws.com:50070
+
+###Create /tmp dir -- on hdfs
+sudo -u hdfs hadoop fs -mkdir /tmp
+sudo -u hdfs hadoop fs -chmod -R 1777 /tmp
+
+Create user directory
+--Only for the first time
+sudo -u hdfs hadoop fs -mkdir /user
+sudo -u hdfs hadoop fs -mkdir /user/ubuntu
+sudo -u hdfs hadoop fs -chown ubuntu:ubuntu /user/ubuntu
+
+
+For Job History -- On HDFS
+
+sudo -u hdfs hadoop fs -mkdir -p /user/history
+sudo -u hdfs hadoop fs -chmod -R 1777 /user/history
+sudo -u hdfs hadoop fs -chown mapred:hadoop /user/history
+  
+For YARN logs -- On HDFS
+
+sudo -u hdfs hadoop fs -mkdir -p /var/log/hadoop-yarn
+sudo -u hdfs hadoop fs -chown yarn:mapred /var/log/hadoop-yarn  
+  
+Create and permission local dirs ### ON ALL NODES  ###
+  
+sudo mkdir -p /data/1/yarn/local
+sudo mkdir -p /data/1/yarn/logs
+sudo chown -R yarn:yarn /data/1/yarn/local
+sudo chown -R yarn:yarn /data/1/yarn/logs
+
+
+On Master
+
+sudo service hadoop-yarn-resourcemanager start
+--if already started issue stop first
+
+On Slaves
+
+sudo service hadoop-yarn-nodemanager start
+--if already started issue stop first
+
+Start Job History server on master
+
+sudo service hadoop-mapreduce-historyserver start
+--if already started issue stop first
+
+
+http://ec2-52-3-178-66.compute-1.amazonaws.com:8088
+http://ec2-52-3-178-66.compute-1.amazonaws.com:19888
+
+
+Validation
+
+--Upload input to HDFS
+hadoop fs -mkdir input
+hadoop fs -copyFromLocal input/stocks/* input
+
+Delete Output Directory: 
+hadoop fs -rm -r output/mapreduce/stocks
+
+Submit Job: 
+hadoop jar MaxClosePrice-1.0.jar com.hirw.maxcloseprice.MaxClosePrice /user/ubuntu/input output/mapreduce/stocks
+
+View Result:
+hadoop fs -cat output/mapreduce/stocks/part-r-00000
+
+

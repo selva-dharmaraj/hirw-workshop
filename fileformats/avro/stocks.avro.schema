@@ -1,0 +1,16 @@
+{
+"namespace": "com.hirw.avro",
+ "type": "record",
+ "name": "Stock",
+ "fields": [
+     {"name": "exch", "type": "string"},
+     {"name": "symbol",  "type": ["string", "null"]},
+     {"name": "ymd", "type": ["string", "null"]},
+     {"name": "price_open", "type": "float"},
+     {"name": "price_high",  "type": ["float", "null"]},
+     {"name": "price_low", "type": ["float", "null"]},
+     {"name": "price_close", "type": "float"},
+     {"name": "volume",  "type": ["int", "null"]},
+     {"name": "price_adj_close", "type": ["float", "null"]}	 
+ ]
+}

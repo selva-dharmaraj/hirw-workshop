@@ -1,0 +1,47 @@
+/**************Hadoop In Real World**************/
+Hadoop In Real World *** http://www.hadoopinrealworld.com
+MapReduce Configuration Properties For Optimization Tuning
+/**************Hadoop In Real World**************/
+
+--The amount of memory to request for each map and reduce task. Default 1 GB.
+mapreduce.map.memory.mb
+mapreduce.reduce.memory.mb
+
+Container[pid=container_230155245451_0009_01_000002,containerID=container_234132_0001_01_000001] is running beyond physical memory limits. Current usage: 569.1 MB of 512 MB physical memory used; 970.1 MB of 1.0 GB virtual memory used. Killing container.
+
+--Heap size for JVMS for Map and Reduce Tasks
+mapreduce.map.java.opts
+mapreduce.reduce.java.opts
+
+--Memory and Heap Setting for Application Master
+yarn.app.mapreduce.am.resource.mb
+yarn.app.mapreduce.am.command-opts
+
+--Minimum and Maximum memory allocation for every container. Defaults - MIN 1 GB, MAX 8 GB
+yarn.scheduler.minimum-allocation-mb
+yarn.scheduler.maximum-allocation-mb
+
+--The total amount of buffer memory to use while sorting files. Default 100 MB
+mapreduce.task.io.sort.mb
+
+--To compress Map output
+mapred.compress.map.output
+mapred.map.output.compression.codec
+
+--The number of parallel transfers run by reduce during the copy(shuffle) phase. Default 5.
+mapreduce.reduce.shuffle.parallelcopies
+
+--The number of streams to merge at once while sorting files. Default 10.
+mapreduce.task.io.sort.factor
+
+--Enable MapReduce Map and Reduce speculative execution. Default true.
+mapreduce.map.speculative 
+mapreduce.reduce.speculative
+
+--Enable Uber task configuration. Default false.
+mapreduce.job.ubertask.enable
+
+--Threshold for number of maps, beyond which job is considered too big for the ubertasking optimization.
+--Default 9 for Mappers 1 for Reducers
+mapreduce.job.ubertask.maxmaps
+mapreduce.job.ubertask.maxreduces

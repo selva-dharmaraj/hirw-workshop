@@ -1,0 +1,38 @@
+### www.hadoopinrealworld ###
+### Apache Sqoop - File Formats ###
+
+## IMPORT WITH $CONDITIONS ##
+
+--Data boundary using a different column
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --split-by volume --target-dir /user/hirw/sqoop/stocks_conds
+
+hadoop fs -ls sqoop/stocks_conds
+
+--Custom query import with $CONDITIONS
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --query 'SELECT a.id, a.name, a.trade_date, a.volume, b.dividend_amount from stocks a INNER JOIN dividends b ON a.symbol = b.symbol WHERE a.id > 2 and $CONDITIONS'  --split-by a.volume --target-dir /user/hirw/sqoop/stocks_join_conds
+
+hadoop fs -ls sqoop/stocks_join_conds
+hadoop fs -cat sqoop/stocks_join_conds/part-m-00000
+hadoop fs -cat sqoop/stocks_join_conds/part-m-00001
+hadoop fs -cat sqoop/stocks_join_conds/part-m-00002
+
+## COMPRESSION ##
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --compress -m 2 --target-dir /user/hirw/sqoop/stocks_comp
+
+hadoop fs -ls sqoop/stocks_comp
+hadoop fs -cat sqoop/stocks_comp/part-m-00000
+
+## SEQUENCE FILE ##
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --as-sequencefile -m 2 --target-dir /user/hirw/sqoop/stocks_seq
+
+hadoop fs -ls sqoop/stocks_seq
+hadoop fs -cat sqoop/stocks_seq/part-m-00000
+
+## AVRO ##
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --as-avrodatafile -m 2 --target-dir /user/hirw/sqoop/stocks_avro
+
+hadoop fs -ls sqoop/stocks_avro
+hadoop fs -cat sqoop/stocks_avro/part-m-00000.avro

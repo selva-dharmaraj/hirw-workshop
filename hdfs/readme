@@ -1,0 +1,17 @@
+### www.hadoopinrealworld.com
+### Java program read and write a file to/from from HDFS ###
+
+
+File to write from local file system
+/hirw-workshop/hdfs/test-file
+
+vi /hirw-workshop/hdfs/test-file
+
+Destination file location in HDFS 
+hdfs://ip-172-31-45-216.ec2.internal:8020/user/hirw/test-file
+
+--To copy the file from local file system to HDFS
+hadoop jar /hirw-workshop/hdfs/hdfs-0.0.1.jar com.hirw.hdfs.FileWriteToHDFS /hirw-workshop/hdfs/test-file hdfs://ip-172-31-45-216.ec2.internal:8020/user/hirw/test-file
+
+--To read the file from HDFS
+hadoop jar /hirw-workshop/hdfs/hdfs-0.0.1.jar com.hirw.hdfs.FileReadFromHDFS hdfs://ip-172-31-45-216.ec2.internal:8020/user/hirw/test-file

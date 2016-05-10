@@ -1,0 +1,4 @@
+##www.hadopinrealworld.com##
+##Flume agent to stream data from Twitter##
+
+flume-ng agent --conf /hirw-workshop/flume/tweets/ -f /hirw-workshop/flume/tweets/twitter-flume.conf -Dflume.root.logger=DEBUG,console -n agent

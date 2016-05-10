@@ -1,0 +1,19 @@
+
+--Maximum number of Mappers and Reducers that can be executed on a TaskTracker (MRv1)
+mapred.tasktracker.map.tasks.maximum 
+mapred.tasktracker.reduce.tasks.maximum 
+
+--Set below property to YARN to enable YARN. CLASSIC to enable MRv1
+mapreduce.framework.name
+
+--Memory settings for Mapper and Reducer in YARN
+mapreduce.map.memory.mb
+mapreduce.reduce.memory.mb 
+
+
+--Min & Max memory allocation in YARN
+yarn.scheduler.capacity.minimum-allocation-mb
+yarn.scheduler.capacity.maximum-allocation-mb
+
+--Enable or disable ApplicationMaster auto recovery
+yarn.app.mapreduce.am.job.recovery.enable

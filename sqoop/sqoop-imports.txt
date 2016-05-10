@@ -1,0 +1,90 @@
+### www.hadoopinrealworld ###
+### Apache Sqoop - Imports ###
+
+--To connect to mysql
+mysql --host=ip-172-31-45-216.ec2.internal --user=training --password=training
+
+use training;
+
+CREATE TABLE stocks(
+id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+symbol VARCHAR(64) NOT NULL,
+name VARCHAR(64) NOT NULL,
+trade_date DATE,
+close_price DECIMAL(10,2),
+volume INT,
+updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AAL', 'American Airlines', '2015-11-11', 44.39, 4416900);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AAPL', 'Apple', '2015-11-11', 116.1, 45217900);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('AMGN', 'Amgen', '2015-11-11', 156.0, 1923900);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('GARS', 'Garrison', '2015-11-11', 13.57, 24800);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('SBUX', 'Starbucks', '2015-11-11', 61.87, 4437300);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('SGI', 'Silicon Graphics', '2015-11-11', 5.320, 134300);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('TSLA', 'Tesla', '2015-11-11', 219.1, 3347800);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('TXN', 'Texas Instruments', '2015-11-11', 57.60, 6293100);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('MAT', 'Mattel', '2015-11-11', 24.04, 2920100);
+
+INSERT INTO stocks 
+(symbol, name, trade_date, close_price, volume)
+VALUES
+('INTC', 'Intel', '2015-11-11', 32.86, 19864700);
+
+## IMPORT ##
+
+--Default number of maps - 4
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks
+
+hadoop fs -ls stocks
+hadoop fs -cat stocks/part-m-00001
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks -m 2 --target-dir /user/hirw/sqoop/stocks_nmaps
+
+hadoop fs -ls sqoop/stocks_nmaps
+hadoop fs -cat sqoop/stocks_nmaps/part-m-00001
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks -m 1 --target-dir /user/hirw/sqoop/stocks_terminated --fields-terminated-by '\t' --enclosed-by '"'
+
+hadoop fs -ls sqoop/stocks_terminated
+hadoop fs -cat sqoop/stocks_terminated/part-m-00000
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --columns "symbol,name,trade_date,volume" --where "id > 5" -m 1 --target-dir /user/hirw/sqoop/stocks_selective
+
+hadoop fs -ls sqoop/stocks_selective
+hadoop fs -cat sqoop/stocks_selective/part-m-00000

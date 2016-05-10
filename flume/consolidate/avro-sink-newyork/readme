@@ -1,0 +1,4 @@
+##www.hadoopinrealworld.com##
+##To run flume agent - on newyork server##
+
+flume-ng agent --conf /hirw-workshop/flume/consolidate/avro-sink-newyork/ -f /hirw-workshop/flume/consolidate/avro-sink-newyork/avro-sink-newyork.conf -Dflume.root.logger=DEBUG,console -n agent

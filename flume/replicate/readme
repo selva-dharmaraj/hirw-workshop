@@ -1,0 +1,4 @@
+##www.hadoopinrealworld.com##
+##To run simple flume agent to demonstrate replication##
+
+flume-ng agent --conf /hirw-workshop/flume/replicate/ -f /hirw-workshop/flume/replicate/replicate-flume.conf -Dflume.root.logger=DEBUG,console -n agent

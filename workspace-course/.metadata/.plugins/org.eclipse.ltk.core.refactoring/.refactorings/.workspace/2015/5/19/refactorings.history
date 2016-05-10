@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;MaxTemperatureCDH5&apos; to &apos;MaximumClosePrice&apos;" description="Rename resource &apos;MaxTemperatureCDH5&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/MaxTemperatureCDH5" name="MaximumClosePrice" stamp="1430735976840" updateReferences="true"/>
+</session>

@@ -1,0 +1,46 @@
+hadoop fs -mkdir input/twitter
+hadoop fs -rm -r input/twitter/*
+hadoop fs -copyFromLocal /home/cloudera/hirw-workshop/input/twitter/* input/twitter
+
+
+hive> CREATE DATABASE twitter;
+hive> USE twitter;
+
+hive> ADD JAR /home/cloudera/hirw-workshop/hive/lib/hive-serdes-1.0-SNAPSHOT.jar;
+
+hive> CREATE EXTERNAL TABLE tweets (
+  id BIGINT,
+  created_at STRING,
+  source STRING,
+  favorited BOOLEAN,
+  retweeted BOOLEAN,
+  retweeted_status STRUCT<
+    text:STRING,
+    user:STRUCT<screen_name:STRING,name:STRING>,
+    retweet_count:INT>,
+  entities STRUCT<
+    urls:ARRAY<STRUCT<expanded_url:STRING>>,
+    user_mentions:ARRAY<STRUCT<screen_name:STRING,name:STRING>>,
+    hashtags:ARRAY<STRUCT<text:STRING>>>,
+  text STRING,
+  user STRUCT<
+    screen_name:STRING,
+    name:STRING,
+	location:STRING,
+    friends_count:INT,
+    followers_count:INT,
+    statuses_count:INT,
+    verified:BOOLEAN,
+    utc_offset:INT,
+    time_zone:STRING>
+) 
+ROW FORMAT SERDE 'com.cloudera.hive.serde.JSONSerDe'
+LOCATION '/user/cloudera/input/twitter';
+
+hive> SELECT id, source, text FROM tweets;
+
+hive> SELECT DISTINCT user.screen_name, user.followers_count, user.location
+FROM tweets
+WHERE size(entities.hashtags) > 0 and retweeted_status IS NULL
+ORDER BY user.followers_count DESC
+LIMIT 5;

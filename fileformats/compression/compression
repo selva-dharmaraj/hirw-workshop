@@ -1,0 +1,19 @@
+--GZIP file
+gzip -c -- /hirw-workshop/input/fileformat/stocks-big > stocks-compressed.gz
+
+--Delete output directory before MR job exection
+hadoop fs -rm -r output/fileformats/compression
+
+--Both Map Output and Output compression set 
+hadoop jar /hirw-workshop/mapreduce/stocks/MaxClosePriceTool-1.0.jar com.hirw.maxcloseprice.MaxClosePriceTool -Dmapreduce.map.output.compress=true -Dmapreduce.map.output.compress.codec=org.apache.hadoop.io.compress.GzipCodec -Dmapreduce.output.fileoutputformat.compress=true -Dmapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec /user/hirw/input/fileformats/compression output/fileformats/compression
+
+--Check blocks
+sudo -u hdfs hdfs fsck /user/ubuntu/input/fileformat/compression -files -blocks -locations 
+
+hadoop fs -ls output/fileformat/compression
+
+hadoop fs -copyToLocal output/fileformat/compression/part-r-00000.gz
+
+--Unzip file
+gzip -d part-r-00000.gz
+

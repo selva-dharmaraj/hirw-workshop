@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;SequenceFile&apos; to &apos;SequenceFile-obsolete&apos;" description="Rename resource &apos;SequenceFile&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/SequenceFile" name="SequenceFile-obsolete" stamp="1436356504654" updateReferences="true"/>&#x0A;<refactoring comment="Rename resource &apos;SmallFilesSequenceFile&apos; to &apos;SequenceFile&apos;" description="Rename resource &apos;SmallFilesSequenceFile&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/SmallFilesSequenceFile" name="SequenceFile" stamp="1436356517953" updateReferences="true"/>
+</session>

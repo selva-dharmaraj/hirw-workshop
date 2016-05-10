@@ -1,0 +1,6 @@
+1430736025787	Rename type 'MaxTemperature'
+1430736036525	Rename type 'MaxTemperatureMapper'
+1430736044606	Rename type 'MaxTemperatureReducer'
+1430736713692	Rename type 'MaxTemperatureTest'
+1430738533354	Rename package 'com.hirw.maxtemperature'
+1430738543241	Rename package 'com.hirw.maxtemperature.tests'

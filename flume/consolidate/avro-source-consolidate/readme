@@ -1,0 +1,4 @@
+##www.hadoopinrealworld.com##
+##To run flume agent to consolidate logs from newyork and chicago servers##
+
+flume-ng agent --conf /hirw-workshop/flume/consolidate/avro-source-consolidate/ -f /hirw-workshop/flume/consolidate/avro-source-consolidate/avro-source-consolidate.conf -Dflume.root.logger=DEBUG,console -n agent

@@ -1,0 +1,29 @@
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+</p>
+<div id="map" style="width: 100%; height: 100%;"> </div>
+<p>
+<script type="text/javascript">
+var songs_arr = [
+[7.95501,-1.03182,"Rhian Benson",0.4918359590583831,0.5763999812554107]
+];
+var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 1,
+      center: new google.maps.LatLng(0, 0),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+var infowindow = new google.maps.InfoWindow();
+var marker, i;
+for (i = 0; i < songs_arr.length; i++) {  
+      marker = new google.maps.Marker({
+        position: new google.maps.LatLng(songs_arr[i][0], songs_arr[i][1]),
+        map: map
+      });
+google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        return function() {
+          infowindow.setContent(songs_arr[i][2] +'<br />Artist Familiarity: ' + songs_arr[i][3] + '<br />Avg. Song Hotness: ' + songs_arr[i][4]);
+          infowindow.open(map, marker);
+        }
+      })(marker, i));
+    }
+</script>
+</p>

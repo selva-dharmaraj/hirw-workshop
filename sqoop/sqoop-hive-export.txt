@@ -1,0 +1,22 @@
+### www.hadoopinrealworld ###
+### Apache Sqoop - Hive & Export ###
+
+## EXPORT ##
+
+CREATE TABLE stocks_sqoop(
+id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+symbol VARCHAR(64) NOT NULL,
+name VARCHAR(64) NOT NULL,
+trade_date DATE,
+close_price DECIMAL(10,2),
+volume INT,
+updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+sqoop export --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks_sqoop --export-dir /user/hirw/sqoop/stocks_modified/merged
+
+## HIVE ##
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --target-dir /user/hirw/sqoop/hive  -m 1 --hive-import --hive-table hivetemp.stocks_sqoop
+
+hive> DESCRIBE FORMATTED stocks_sqoop;
+
